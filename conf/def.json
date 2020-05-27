@@ -1,0 +1,9 @@
+[
+	{
+	"keyFile":"/etc/pki/tls/private/ca.key",
+	"crtFile":"/etc/pki/tls/certs/ca.crt",
+	"portNum":443,
+	"serverName":"HTTPS",
+	"callbackFile":"/home/ntvr/nodeTcl/nodes/https.tcl"
+	}
+]

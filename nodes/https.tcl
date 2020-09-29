@@ -11,12 +11,21 @@ proc HTTPS::server {channel clientaddr clientport} {
 	set parseList [HTTPS::parseRequest $line]
 	set method [lindex $parseList 0]
 	set length 0
+	set acceptList {}
 	while {[gets $channel line] > 0 } {
 		puts $line
 		set keyValue [split $line :]
-		if {[lindex $keyValue 0] == "Content-Length"} {
+		set tempKey [lindex $keyValue 0]
+		if {$tempKey == "Content-Length"} {
 			set length [string trim [lindex $keyValue 1]]
 			puts "length = $length"
+			} elseif {$tempKey == "Accept"} {
+			set tempList [split [lindex [split [lindex $keyValue 1] \;] 0] ,]
+			puts "xxx: [split [lindex $keyValue 1] \;]"
+			foreach el $tempList {
+				lappend acceptList [string trim $el]
+				}
+			puts "accept = $acceptList"
 			}
 		}
 	if {$method == "POST"} {
@@ -48,21 +57,12 @@ proc HTTPS::server {channel clientaddr clientport} {
 			set fp [open $path r]
 			set str [read $fp]
 			close $fp
-			if {$ext == "html"} {
-				set type "text/html"
-				} elseif {$ext == "css"} {
-				set type "text/css"
-				} elseif {$ext == "js"} {
-				set type "application/javascript"
-				} else {
-				set type "text/plain"
-				}
 			puts $channel "$httpVer 200 OK"
 			puts $channel $date
 			puts $channel $serverInfo
 			#puts $channel "Content-Length: [string length $str]"
 			puts $channel "Connection: Closed"
-			puts $channel "Content-Type: $type"
+			puts $channel "Content-Type: [HTTPS::parseType $ext]"
 			puts $channel ""
 			puts $channel $str
 			} elseif {$ext == "tcl"} {
@@ -73,7 +73,11 @@ proc HTTPS::server {channel clientaddr clientport} {
 			puts $channel $serverInfo
 			puts $channel "Content-Length: [string length $str]"
 			puts $channel "Connection: Closed"
-			puts $channel "Content-Type: text/html"
+			if {[lsearch $acceptList "text/html"] != -1 || [lsearch $acceptList "*/*"] != -1} {
+				puts $channel "Content-Type: [lindex $acceptList 0]"
+				} else {
+				puts $channel "Content-Type: text/html"
+				}
 			puts $channel ""
 			puts $channel $str
 			} else {
@@ -84,7 +88,7 @@ proc HTTPS::server {channel clientaddr clientport} {
 			puts $channel $serverInfo
 			puts $channel "Content-Length: $fpsize"
 			puts $channel "Connection: Closed"
-			puts $channel "Content-Type: image/jpeg"
+			puts $channel "Content-Type: [HTTPS::parseType $ext]"
 			puts $channel ""
 			set fp [open $path r]
 			fconfigure $fp -encoding binary -translation binary
@@ -122,6 +126,75 @@ proc HTTPS::parseType {ext} {
 			}
 		js {
 			return "application/javascript"
+			}
+		ogg {
+			return "application/ogg"
+			}
+		json {
+			return "application/json"
+			}
+		xml {
+			return "application/xml"
+			}
+		zip {
+			return "application/zip"
+			}
+		mp3 {
+			return "audio/mpeg"
+			}
+		wma {
+			return "audio/x-ms-wma"
+			}
+		wav {
+			return "audio/x-wav"
+			}
+		gif {
+			return "image/gif"
+			}
+		jpg {
+			return "image/jpeg"
+			}
+		jpeg {
+			return "image/jpeg"
+			}
+		png {
+			return "image/png"
+			}
+		tiff {
+			return "image/tiff"
+			}
+		tif {
+			return "image/tiff"
+			}
+		csv {
+			return "text/csv"
+			}
+		txt {
+			return "text/plain"
+			}
+		mpeg {
+			return "video/mpeg"
+			}
+		mpg {
+			return "video/mpeg"
+			}
+		mp4 {
+			return "video/mp4"
+			}
+		qt {
+			return "video/quicktime"
+			}
+		wmv {
+			return "video/x-ms-wmv"
+			}
+		flv {
+			return "video/x-flv"
+			}
+		webm {
+			return "video/webm"
+			}
+		default {
+			return "application/octet-stream"
 			}
 		}
 	}

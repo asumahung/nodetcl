@@ -51,5 +51,4 @@ proc ROOT::deinit {} {
 			thread::release $tid
 			}
 		}
-	exit
 	}

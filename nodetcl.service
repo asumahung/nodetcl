@@ -1,0 +1,11 @@
+[Unit]
+Description=nodeTcl Daemon
+
+[Service]
+Type=forking
+ExecStart=/home/ntvr/nodeTcl/nodetcl start
+ExecStop=/home/ntvr/nodeTcl/nodetcl stop
+ExecReload=/home/ntvr/nodeTcl/nodetcl restart
+
+[Install]
+WantedBy=multi-user.target

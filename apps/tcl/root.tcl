@@ -1,15 +1,20 @@
 package require Thread
 package require tls
 package require json
+package require comm
+
+set PORT 9999
 
 namespace eval ROOT {
 	variable defFile "/home/ntvr/nodeTcl/conf/def.json"
 	variable nodeThreadIDList {}
 	}
 
-proc ROOT::init {} {
+proc ROOT::init {inDefFile} {
 	variable defFile
 	variable nodeThreadIDList
+	
+	set defFile $inDefFile
 	
 	if {[catch {open $defFile r} defFp]} {
 		puts $defFp
@@ -38,5 +43,13 @@ proc ROOT::init {} {
 		}
 	}
 
-ROOT::init
-vwait forever
+proc ROOT::deinit {} {
+	variable nodeThreadIDList
+	
+	foreach tid $nodeThreadIDList {
+		if {thread::exists $tid} {
+			thread::release $tid
+			}
+		}
+	exit
+	}

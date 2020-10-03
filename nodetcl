@@ -1,0 +1,50 @@
+#!/bin/sh
+
+MYHOME=/home/ntvr/nodeTcl
+DAEMON_NAME=nodetcl
+DAEMON="./$DAEMON_NAME.tcl"
+CONF="./conf/def.json"
+
+start() {
+    cd $MYHOME/apps/tcl
+    nohup $DAEMON $CONF > $DAEMON.out 2>&1 &
+	sleep 1
+    pid=`ps -ef | grep $DAEMON_NAME | grep tclsh | awk '{print $2}'`	
+    if [ "$pid" = "" ]; then
+	echo "nodetcl is NOT running"
+	RETVAL=3
+    else
+	echo "nodetcl is running successfully"
+	RETVAL=0
+    fi
+}
+
+stop() {
+	$MYHOME/apps/tcl/nodetclstopper.tcl
+	sleep 2
+    pid=`ps -ef | grep $DAEMON_NAME | grep tclsh | awk '{print $2}'`
+    if [ "$pid" != "" ]
+    then
+	sudo kill -9 $pid
+    fi
+    echo "nodetcl is stopped successfully"
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+start)
+        start
+        ;;
+stop)
+        stop
+        ;;
+restart)
+        restart
+        ;;
+esac
+
+exit $RETVAL

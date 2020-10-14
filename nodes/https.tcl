@@ -30,7 +30,25 @@ proc HTTPS::server {channel clientaddr clientport} {
 		}
 	if {$method == "POST"} {
 		puts "POST"
-		set line [read $channel $length]
+		set line ""
+		set readLength 0
+		while 1 {
+			set count [expr {[gets $channel ch] + 2}]
+			incr readLength $count
+			append line $ch
+			puts $ch
+			if {$readLength >= $length} {
+				break
+				} else {
+				puts "readLength = $readLength"
+				after 5 {incr readLength}
+				}
+			}
+		#while {[gets $channel ch] > 0} {
+		#	append line $ch
+		#	puts -nonewline $ch
+		#	}
+		#set line [read $channel]
 		puts "body = $line"
 		}
 	puts "Finish"
@@ -39,6 +57,7 @@ proc HTTPS::server {channel clientaddr clientport} {
 	set date "Date: [clock format [clock seconds] -format {%a, %d %b %Y %H:%M:%S} -gmt true] GMT"
 	set serverInfo "Server: nodeTcl/0.0.1a (Linux)"
 	set ext [lindex $parseList 3]
+	puts "ext = $ext"
 	if {[file exists $path] != 1} {
 		set errorFp [open "${docRoot}/http404.html" r]
 		set errorStr [read $errorFp]
@@ -60,11 +79,13 @@ proc HTTPS::server {channel clientaddr clientport} {
 			puts $channel "$httpVer 200 OK"
 			puts $channel $date
 			puts $channel $serverInfo
-			#puts $channel "Content-Length: [string length $str]"
-			puts $channel "Connection: Closed"
+			puts $channel "Content-Length: [string length $str]"
+			puts $channel "Connection: close"
 			puts $channel "Content-Type: [HTTPS::parseType $ext]"
 			puts $channel ""
 			puts $channel $str
+			puts "Request responded"
+			flush $channel
 			} elseif {$ext == "tcl"} {
 			source $path
 			set str [generate [lindex $parseList 3]]
@@ -72,7 +93,7 @@ proc HTTPS::server {channel clientaddr clientport} {
 			puts $channel $date
 			puts $channel $serverInfo
 			puts $channel "Content-Length: [string length $str]"
-			puts $channel "Connection: Closed"
+			puts $channel "Connection: close"
 			if {[lsearch $acceptList "text/html"] != -1 || [lsearch $acceptList "*/*"] != -1} {
 				puts $channel "Content-Type: [lindex $acceptList 0]"
 				} else {
